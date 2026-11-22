@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>מערכת סדרנים - ירושלים</title>
+</head>
+<body>
+  <h2>מערכת סדרנים</h2>
+  <button onclick="loadData()">טען נתונים מהגיליון</button>
+  <button onclick="sendTestRequest()">שלח בקשת שיבוץ לבדיקה</button>
+  <pre id="output"></pre>
+
+  <script>
+    const API_URL = 'הדבק_כאן_את_כתובת_ה_EXEC_שלך';
+
+    async function loadData() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function sendTestRequest() {
+      await fetch(API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'בקשת שיבוץ',
+          date: '2026-11-23',
+          worker: 'בדיקת מערכת',
+          mosad: 'קול תורה',
+          hours: '07:00-14:00'
+        })
+      });
+      alert('הבקשה נשלחה לגיליון');
+    }
+  </script>
+</body>
+</html>
