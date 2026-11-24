@@ -3,471 +3,463 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>מערכת שיבוצים ושעון נוכחות — סדרנים ירושלים</title>
+  <title>שיבוץ עמדות ונוכחות — סדרנים ירושלים</title>
   <style>
     * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
-    body { margin: 0; background: #f3f5f9; color: #1b2432; direction: rtl; }
-    header { background: #1e3a5f; color: #fff; padding: 14px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
-    header h1 { margin: 0; font-size: 18px; }
-    .sync-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
-    .badge { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.16); }
-    button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 14px; font-size: 14px; font-weight: 600; transition: 0.15s; }
-    button:hover { opacity: 0.92; }
+    body { margin: 0; background: #f1f5f9; color: #0f172a; direction: rtl; }
+    header { background: #1e3a5f; color: #fff; padding: 14px 18px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+    header h1 { margin: 0; font-size: 19px; }
+    .container { max-width: 1180px; margin: 16px auto; padding: 0 14px; }
+    .top-bar { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+    .top-bar > div { flex: 1; min-width: 210px; }
+    label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 5px; color: #334155; }
+    select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; background: #fff; }
+    button { cursor: pointer; border: none; border-radius: 9px; padding: 11px 16px; font-size: 15px; font-weight: 700; transition: 0.15s; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
     .btn-primary { background: #2563eb; color: #fff; }
     .btn-success { background: #16a34a; color: #fff; }
-    .btn-warn { background: #d97706; color: #fff; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-wa { background: #15803d; color: #fff; }
     .btn-light { background: #e2e8f0; color: #1e293b; }
-    .container { max-width: 1120px; margin: 18px auto; padding: 0 14px; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
-    .tab-btn { background: #dbe4f0; color: #1e3a5f; padding: 10px 18px; border-radius: 10px 10px 0 0; }
-    .tab-btn.active { background: #fff; color: #1e3a5f; box-shadow: 0 -2px 6px rgba(0,0,0,0.05); }
-    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #334155; }
-    input, select, textarea { width: 100%; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff; }
-    .status-box { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; display: none; }
-    .status-ok { display: block; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .status-err { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .tab-btn { background: #dbe4f0; color: #1e3a5f; padding: 11px 18px; }
+    .tab-btn.active { background: #1e3a5f; color: #fff; }
+    .alert { padding: 12px 14px; border-radius: 10px; margin-bottom: 14px; font-size: 14px; font-weight: 600; display: none; }
+    .alert.ok { display: block; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .alert.err { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .positions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .pos-card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 3px 10px rgba(15,23,42,0.07); border-right: 6px solid #16a34a; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+    .pos-card.urgent { border-right-color: #dc2626; }
+    .pos-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: #dcfce7; color: #166534; }
+    .pos-card.urgent .pos-badge { background: #fee2e2; color: #991b1b; }
+    .pos-title { font-size: 18px; font-weight: 700; margin: 4px 0; color: #0f172a; }
+    .pos-meta { font-size: 14px; color: #475569; line-height: 1.6; }
+    .card { background: #fff; border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); }
+    .clock-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+    .clock-btn { padding: 16px; font-size: 17px; width: 100%; }
+    .info-panel { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 14px; line-height: 1.6; white-space: pre-line; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
     th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: right; }
     th { background: #1e3a5f; color: #fff; }
-    tr:nth-child(even) { background: #f8fafc; }
-    .msg-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; white-space: pre-line; font-size: 13px; margin-top: 8px; }
     .hidden { display: none; }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <h1>מערכת שיבוצים ושעון נוכחות — סדרנים ירושלים</h1>
-      <div style="font-size: 12px; opacity: 0.85;">תעריף בסיס: 55 ₪ לשעה | אימות מיקום GPS עד 250 מטר</div>
+      <h1>מערכת שיבוץ עמדות ונוכחות — סדרנים ירושלים</h1>
+      <div style="font-size: 12px; opacity: 0.9;">בחירת עמדות פנויות בפריסה יומית | שעון נוכחות GPS (250 מ׳)</div>
     </div>
-    <div class="sync-bar">
-      <span id="syncStatus" class="badge">מוכן לסנכרון</span>
-      <button class="btn-light" onclick="loadFromSheets()">טען נתונים מהגיליון</button>
-    </div>
+    <button class="btn-light" onclick="loadData()">רענן נתונים מהגיליון</button>
   </header>
 
   <div class="container">
-    <div id="alertBox" class="status-box"></div>
+    <div id="alertBox" class="alert"></div>
 
-    <div class="tabs">
-      <button id="tabWorkerBtn" class="tab-btn active" onclick="switchTab('worker')">אזור עובד (בקשות ושעון GPS)</button>
-      <button id="tabAdminBtn" class="tab-btn" onclick="switchTab('admin')">ממשק מנהל (שיבוצים, הודעות וסיכום)</button>
+    <!-- בחירת עובד קבועה למעלה -->
+    <div class="top-bar">
+      <div>
+        <label>בחר/י את שמך (חובה לפני בקשת שיבוץ או החתמת שעון)</label>
+        <select id="activeWorker" onchange="onWorkerSelected()">
+          <option value="">-- בחר עובד מהרשימה --</option>
+        </select>
+      </div>
+      <div>
+        <label>סינון לפי גזרה</label>
+        <select id="gizraFilter" onchange="renderPositions()">
+          <option value="">כל הגזרות</option>
+        </select>
+      </div>
+      <div>
+        <label>חיפוש מוסד / כתובת</label>
+        <input id="searchBox" type="text" placeholder="הקלד שם בית ספר או רחוב..." oninput="renderPositions()" />
+      </div>
     </div>
 
-    <!-- אזור עובד -->
-    <section id="workerSection">
-      <div class="card">
-        <h2>הגשת בקשת שיבוץ לעמדה</h2>
-        <div class="grid">
-          <div>
-            <label>שם עובד</label>
-            <select id="reqWorker" onchange="syncWorkerPhone()">
-              <option value="">בחר עובד...</option>
-            </select>
-          </div>
-          <div>
-            <label>טלפון עובד</label>
-            <input id="reqPhone" type="text" placeholder="050-0000000" />
-          </div>
-          <div>
-            <label>תאריך</label>
-            <input id="reqDate" type="date" />
-          </div>
-          <div>
-            <label>מוסד חינוכי</label>
-            <select id="reqMosad" onchange="syncMosadDetails()">
-              <option value="">בחר מוסד...</option>
-            </select>
-          </div>
-          <div>
-            <label>גזרה</label>
-            <input id="reqGizra" type="text" readonly />
-          </div>
-          <div>
-            <label>כתובת</label>
-            <input id="reqAddress" type="text" readonly />
-          </div>
-          <div>
-            <label>שעות משמרת</label>
-            <input id="reqHours" type="text" value="07:00-15:00" />
-          </div>
-          <div>
-            <label>הערות</label>
-            <input id="reqNotes" type="text" placeholder="אופציונלי" />
-          </div>
-        </div>
-        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="btn-primary" onclick="submitShiftRequest()">שלח בקשת שיבוץ</button>
-        </div>
-      </div>
+    <div class="tabs">
+      <button id="btnTabPositions" class="tab-btn active" onclick="showTab('positions')">עמדות פנויות לשיבוץ</button>
+      <button id="btnTabClock" class="tab-btn" onclick="showTab('clock')">שעון נוכחות (כניסה / יציאה)</button>
+      <button id="btnTabAdmin" class="tab-btn" onclick="showTab('admin')">ממשק מנהל</button>
+    </div>
 
+    <!-- לשונית 1: פריסה גדולה של מקומות פנויים -->
+    <section id="tabPositions">
+      <div id="positionsContainer" class="positions-grid">טוען עמדות פנויות...</div>
+    </section>
+
+    <!-- לשונית 2: שעון נוכחות נעול -->
+    <section id="tabClock" class="hidden">
       <div class="card">
-        <h2>שעון נוכחות מבוסס מיקום GPS (עד 250 מטר)</h2>
-        <div class="grid">
-          <div>
-            <label>שם עובד</label>
-            <select id="attWorker">
-              <option value="">בחר עובד...</option>
-            </select>
-          </div>
-          <div>
-            <label>מוסד / עמדה</label>
-            <select id="attMosad">
-              <option value="">בחר מוסד...</option>
-            </select>
-          </div>
-          <div>
-            <label>אפשרות בדיקה מהמחשב</label>
-            <select id="demoMode">
-              <option value="gps">GPS אמיתי מהמכשיר</option>
-              <option value="sim_ok">סימולציה: בעמדה (מרחק 35 מטר)</option>
-              <option value="sim_far">סימולציה: מחוץ לטווח (מרחק 650 מטר)</option>
-            </select>
-          </div>
+        <h2>החתמת כניסה ויציאה בזמן אמת (ללא עריכת שעה ידנית)</h2>
+        <div style="max-width: 420px; margin-bottom: 10px;">
+          <label>מוסד שבו את/ה מוצב/ת כעת</label>
+          <select id="clockMosad">
+            <option value="">-- בחר מוסד --</option>
+          </select>
         </div>
-        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="btn-success" onclick="clockAction('כניסת משמרת')">החתמת כניסת משמרת</button>
-          <button class="btn-warn" onclick="clockAction('יציאת משמרת')">החתמת יציאת משמרת</button>
+
+        <div class="clock-box">
+          <button id="btnCheckIn" class="btn-success clock-btn" onclick="stampClock('כניסת משמרת')">החתמת כניסה עכשיו (GPS)</button>
+          <button id="btnCheckOut" class="btn-danger clock-btn" onclick="stampClock('יציאת משמרת')">החתמת יציאה עכשיו (GPS)</button>
         </div>
-        <div id="gpsInfo" class="msg-box" style="margin-top: 12px;">ממתין להחתמת כניסה או יציאה...</div>
+
+        <div id="clockStatusBox" class="info-panel">בחר/י שם עובד ומוסד, ולחצ/י על החתמת כניסה או יציאה. השעה והמיקום נרשמים אוטומטית.</div>
+
+        <div style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <div style="font-size: 13px; color: #475569; margin-bottom: 8px;">שכחת להחתים כניסה או יציאה בזמן אמת? אין אפשרות לערוך לבד — שלח/י הודעה למנהל לתיקון ידני:</div>
+          <button class="btn-wa" onclick="reportMissingStampToManager()">שכחתי להחתים — שלח הודעה למנהל בוואטסאפ</button>
+        </div>
       </div>
     </section>
 
-    <!-- ממשק מנהל -->
-    <section id="adminSection" class="hidden">
+    <!-- לשונית 3: ממשק מנהל -->
+    <section id="tabAdmin" class="hidden">
       <div class="card">
-        <h2>בקשות עובדים מהגיליון והפקת הודעה מוכנה</h2>
-        <div id="requestsTableWrap">טען נתונים מהגיליון כדי לצפות בבקשות.</div>
-        <div style="margin-top: 14px;">
-          <label>הודעה מוכנה לשליחה לעובד (כולל מוסד, כתובת, שעות וקב״ט אחראי)</label>
-          <div id="waMessage" class="msg-box">בחר/י שורת בקשה או שיבוץ כדי להפיק הודעה מוכנה.</div>
-          <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-light" onclick="copyWaMessage()">העתק הודעה</button>
-            <button class="btn-success" onclick="openWhatsApp()">שלח בוואטסאפ</button>
-          </div>
+        <h2>בקשות שיבוץ שהתקבלו מהעובדים</h2>
+        <div id="adminRequestsWrap">טוען בקשות...</div>
+        <div style="margin-top: 12px;">
+          <label>הודעת שיבוץ מוכנה לשליחה לעובד</label>
+          <div id="waPreview" class="info-panel">לחצ/י על "הפק הודעת שיבוץ" ליד בקשה כדי להכין הודעה עם מוסד, כתובת, שעות וקב״ט.</div>
+          <button class="btn-wa" style="margin-top: 8px;" onclick="sendWaToWorker()">שלח הודעה לעובד בוואטסאפ</button>
         </div>
       </div>
 
       <div class="card">
-        <h2>סיכום נוכחות ושכר משוער (55 ₪ לשעה)</h2>
-        <div id="attendanceTableWrap">טען נתונים מהגיליון כדי לצפות ביומן הנוכחות.</div>
+        <h2>יומן נוכחות וסיכום שכר (55 ₪ לשעה)</h2>
+        <div id="adminAttendanceWrap">טוען נוכחות...</div>
       </div>
     </section>
   </div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbyvE-LmAWYXzRWa2HpqOcuhx9maMWntd9HTr9P2OB5EgFZfeamKc_vTzzFeZLpXvikh/exec';
+    const MANAGER_PHONE = '972500000000'; // עדכן כאן את מספר הוואטסאפ של המנהל בפורמט 9725...
 
-    let state = {
-      mosadot: [],
-      workers: [],
-      requests: [],
-      attendance: []
-    };
-    let lastWaPhone = '';
+    let appData = { dailyPositions: [], mosadot: [], workers: [], requests: [], attendance: [] };
+    let selectedWorkerPhone = '';
 
-    function showAlert(msg, type = 'ok') {
-      const el = document.getElementById('alertBox');
-      el.textContent = msg;
-      el.className = 'status-box ' + (type === 'ok' ? 'status-ok' : 'status-err');
+    function showAlert(text, type = 'ok') {
+      const box = document.getElementById('alertBox');
+      box.textContent = text;
+      box.className = 'alert ' + type;
     }
 
-    function switchTab(tab) {
-      const isWorker = tab === 'worker';
-      document.getElementById('workerSection').classList.toggle('hidden', !isWorker);
-      document.getElementById('adminSection').classList.toggle('hidden', isWorker);
-      document.getElementById('tabWorkerBtn').classList.toggle('active', isWorker);
-      document.getElementById('tabAdminBtn').classList.toggle('active', !isWorker);
+    function showTab(name) {
+      document.getElementById('tabPositions').classList.toggle('hidden', name !== 'positions');
+      document.getElementById('tabClock').classList.toggle('hidden', name !== 'clock');
+      document.getElementById('tabAdmin').classList.toggle('hidden', name !== 'admin');
+      document.getElementById('btnTabPositions').classList.toggle('active', name === 'positions');
+      document.getElementById('btnTabClock').classList.toggle('active', name === 'clock');
+      document.getElementById('btnTabAdmin').classList.toggle('active', name === 'admin');
     }
 
-    function setDefaultDate() {
-      const d = document.getElementById('reqDate');
-      if (d && !d.value) {
-        d.value = new Date().toISOString().slice(0, 10);
-      }
-    }
-
-    async function loadFromSheets() {
-      document.getElementById('syncStatus').textContent = 'טוען מהגיליון...';
+    async function loadData() {
       try {
-        const res = await fetch(API_URL, { method: 'GET' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const res = await fetch(API_URL);
         const data = await res.json();
-        state.mosadot = Array.isArray(data.mosadot) ? data.mosadot : [];
-        state.workers = Array.isArray(data.workers) ? data.workers : [];
-        state.requests = Array.isArray(data.requests) ? data.requests : [];
-        state.attendance = Array.isArray(data.attendance) ? data.attendance : [];
+        appData.dailyPositions = Array.isArray(data.dailyPositions) ? data.dailyPositions : [];
+        appData.mosadot = Array.isArray(data.mosadot) ? data.mosadot : [];
+        appData.workers = Array.isArray(data.workers) ? data.workers : [];
+        appData.requests = Array.isArray(data.requests) ? data.requests : [];
+        appData.attendance = Array.isArray(data.attendance) ? data.attendance : [];
 
-        populateSelects();
-        renderAdminTables();
-        document.getElementById('syncStatus').textContent = 'מסונכרן (' + state.mosadot.length + ' מוסדות)';
-        showAlert('הנתונים נטענו בהצלחה מ-Google Sheets.', 'ok');
+        populateDropdowns();
+        renderPositions();
+        renderAdmin();
+        updateClockButtonsLock();
       } catch (err) {
-        document.getElementById('syncStatus').textContent = 'שגיאת סנכרון';
-        showAlert('לא הצלחתי לטעון נתונים מהגיליון: ' + err.message + '. ודא/י שהפריסה ב-Apps Script מוגדרת ל-Anyone.', 'err');
+        showAlert('שגיאה בטעינת נתונים מהגיליון: ' + err.message, 'err');
       }
     }
 
-    function populateSelects() {
-      const workerNames = state.workers.map(w => w['שם מלא']).filter(Boolean);
-      ['reqWorker', 'attWorker'].forEach(id => {
-        const sel = document.getElementById(id);
-        const current = sel.value;
-        sel.innerHTML = '<option value="">בחר עובד...</option>' +
-          workerNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
-        if (current) sel.value = current;
-      });
+    function populateDropdowns() {
+      const wSel = document.getElementById('activeWorker');
+      const prevW = wSel.value;
+      wSel.innerHTML = '<option value="">-- בחר עובד מהרשימה --</option>' +
+        appData.workers
+          .map(w => w['שם מלא'])
+          .filter(Boolean)
+          .map(name => `<option value="${esc(name)}">${esc(name)}</option>`)
+          .join('');
+      if (prevW) wSel.value = prevW;
 
-      const mosadNames = state.mosadot.map(m => m['שם מוסד']).filter(Boolean);
-      ['reqMosad', 'attMosad'].forEach(id => {
-        const sel = document.getElementById(id);
-        const current = sel.value;
-        sel.innerHTML = '<option value="">בחר מוסד...</option>' +
-          mosadNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
-        if (current) sel.value = current;
-      });
+      const gizrot = [...new Set(appData.dailyPositions.map(p => p['גזרה']).filter(Boolean))];
+      const gSel = document.getElementById('gizraFilter');
+      const prevG = gSel.value;
+      gSel.innerHTML = '<option value="">כל הגזרות</option>' +
+        gizrot.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+      if (prevG) gSel.value = prevG;
+
+      const allNames = [...new Set([
+        ...appData.dailyPositions.map(p => p['שם מוסד']),
+        ...appData.mosadot.map(m => m['שם מוסד'])
+      ].filter(Boolean))];
+
+      const cSel = document.getElementById('clockMosad');
+      const prevC = cSel.value;
+      cSel.innerHTML = '<option value="">-- בחר מוסד --</option>' +
+        allNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      if (prevC) cSel.value = prevC;
     }
 
-    function syncWorkerPhone() {
-      const name = document.getElementById('reqWorker').value;
-      const found = state.workers.find(w => w['שם מלא'] === name);
-      if (found && found['טלפון']) {
-        document.getElementById('reqPhone').value = found['טלפון'];
+    function onWorkerSelected() {
+      updateClockButtonsLock();
+    }
+
+    function updateClockButtonsLock() {
+      const worker = document.getElementById('activeWorker').value.trim();
+      const btnIn = document.getElementById('btnCheckIn');
+      const btnOut = document.getElementById('btnCheckOut');
+      if (!worker) {
+        btnIn.disabled = false;
+        btnOut.disabled = false;
+        return;
+      }
+      const openShift = [...appData.attendance].reverse().find(a =>
+        String(a['שם עובד'] || '').trim() === worker &&
+        (a['שעת כניסה'] || a['שעת פתיחת משמרת']) &&
+        !(a['שעת יציאה'] || a['שעת סגירת משמרת'])
+      );
+      if (openShift) {
+        btnIn.disabled = true;
+        btnOut.disabled = false;
+        document.getElementById('clockStatusBox').textContent =
+          `קיימת משמרת פתוחה עבור ${worker} במוסד ${openShift['שם מוסד'] || openShift['בית ספר משובץ'] || ''} משעה ${openShift['שעת כניסה'] || openShift['שעת פתיחת משמרת']}. כפתור הכניסה נעול עד להחתמת יציאה.`;
+      } else {
+        btnIn.disabled = false;
+        btnOut.disabled = false;
       }
     }
 
-    function syncMosadDetails() {
-      const name = document.getElementById('reqMosad').value;
-      const found = state.mosadot.find(m => m['שם מוסד'] === name);
-      document.getElementById('reqGizra').value = found ? (found['גזרה'] || '') : '';
-      document.getElementById('reqAddress').value = found ? (found['כתובת'] || '') : '';
-    }
+    function renderPositions() {
+      const wrap = document.getElementById('positionsContainer');
+      const gizraVal = document.getElementById('gizraFilter').value;
+      const q = document.getElementById('searchBox').value.trim().toLowerCase();
 
-    async function postToSheets(payload) {
-      await fetch(API_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
+      const openList = appData.dailyPositions.filter(p => {
+        const st = String(p['סטטוס'] || 'פתוח').trim();
+        if (st === 'משובץ' || st === 'בוטל') return false;
+        if (gizraVal && String(p['גזרה'] || '') !== gizraVal) return false;
+        if (q) {
+          const hay = `${p['שם מוסד'] || ''} ${p['כתובת'] || ''} ${p['גזרה'] || ''}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
       });
-    }
 
-    async function submitShiftRequest() {
-      const worker = document.getElementById('reqWorker').value.trim();
-      const phone = document.getElementById('reqPhone').value.trim();
-      const date = document.getElementById('reqDate').value;
-      const mosad = document.getElementById('reqMosad').value.trim();
-      const gizra = document.getElementById('reqGizra').value.trim();
-      const address = document.getElementById('reqAddress').value.trim();
-      const hours = document.getElementById('reqHours').value.trim();
-      const notes = document.getElementById('reqNotes').value.trim();
-
-      if (!worker || !mosad) {
-        showAlert('יש לבחור שם עובד ומוסד לפני שליחת הבקשה.', 'err');
+      if (!openList.length) {
+        wrap.innerHTML = '<div class="card">אין כרגע עמדות פנויות התואמות לסינון.</div>';
         return;
       }
 
+      wrap.innerHTML = openList.map((p, i) => {
+        const isUrgent = String(p['סטטוס'] || '').includes('דחוף');
+        const dateText = formatDateCell(p['תאריך']);
+        return `
+          <div class="pos-card ${isUrgent ? 'urgent' : ''}">
+            <div>
+              <span class="pos-badge">${esc(p['סטטוס'] || 'פתוח')} • ${esc(p['גזרה'] || 'ירושלים')}</span>
+              <div class="pos-title">${esc(p['שם מוסד'] || '')}</div>
+              <div class="pos-meta">
+                📅 תאריך: <b>${esc(dateText)}</b><br/>
+                📍 כתובת: ${esc(p['כתובת'] || '')}<br/>
+                🕒 שעות: <b>${esc(p['שעות'] || '')}</b>
+              </div>
+            </div>
+            <button class="btn-primary" onclick='requestPosition(${JSON.stringify(p)})'>אני רוצה את העמדה הזו</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function requestPosition(pos) {
+      const worker = document.getElementById('activeWorker').value.trim();
+      if (!worker) {
+        showAlert('יש לבחור את שמך למעלה לפני הגשת בקשה לעמדה.', 'err');
+        return;
+      }
+      const wObj = appData.workers.find(w => w['שם מלא'] === worker) || {};
       try {
-        await postToSheets({
-          action: 'בקשת שיבוץ',
-          date,
-          worker,
-          phone,
-          gizra,
-          mosad,
-          address,
-          hours,
-          notes,
-          status: 'ממתין לטיפול'
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'בקשת שיבוץ',
+            positionId: pos['מזהה עמדה'] || '',
+            date: formatDateCell(pos['תאריך']),
+            gizra: pos['גזרה'] || '',
+            mosad: pos['שם מוסד'] || '',
+            address: pos['כתובת'] || '',
+            hours: pos['שעות'] || '',
+            worker,
+            phone: wObj['טלפון'] || ''
+          })
         });
-        showAlert('בקשת השיבוץ נשלחה לגיליון (לשוניות סנכרון_חי_לוג ובקשות_עובדים).', 'ok');
+        showAlert(`הבקשה של ${worker} לעמדה "${pos['שם מוסד']}" נשלחה למנהל!`, 'ok');
       } catch (err) {
         showAlert('שגיאה בשליחת הבקשה: ' + err.message, 'err');
       }
     }
 
-    function haversineMeters(lat1, lon1, lat2, lon2) {
-      const toRad = v => (v * Math.PI) / 180;
+    function haversine(lat1, lon1, lat2, lon2) {
+      const toRad = d => (d * Math.PI) / 180;
       const R = 6371000;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat / 2) ** 2 +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
       return Math.round(2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
-    function parseMosadCoords(mosadObj) {
-      if (!mosadObj) return null;
-      const raw = String(mosadObj['קואורדינטות GPS'] || '');
-      const nums = raw.match(/-?\d+\.\d+/g);
-      if (nums && nums.length >= 2) {
-        return { lat: parseFloat(nums[0]), lng: parseFloat(nums[1]) };
-      }
-      return null;
+    function findCoords(mosadName) {
+      const item = appData.dailyPositions.find(p => p['שם מוסד'] === mosadName) ||
+                   appData.mosadot.find(m => m['שם מוסד'] === mosadName);
+      if (!item) return null;
+      const nums = String(item['קואורדינטות GPS'] || '').match(/-?\d+\.\d+/g);
+      return nums && nums.length >= 2 ? { lat: parseFloat(nums[0]), lng: parseFloat(nums[1]), address: item['כתובת'] || '' } : null;
     }
 
-    async function clockAction(actionType) {
-      const worker = document.getElementById('attWorker').value.trim();
-      const mosadName = document.getElementById('attMosad').value.trim();
-      const mode = document.getElementById('demoMode').value;
-
-      if (!worker || !mosadName) {
-        showAlert('יש לבחור עובד ומוסד להחתמת שעון.', 'err');
+    function stampClock(action) {
+      const worker = document.getElementById('activeWorker').value.trim();
+      const mosad = document.getElementById('clockMosad').value.trim();
+      if (!worker || !mosad) {
+        showAlert('יש לבחור שם עובד ומוסד לפני החתמת שעון.', 'err');
+        return;
+      }
+      if (!navigator.geolocation) {
+        showAlert('המכשיר אינו תומך ב-GPS. פנה/י למנהל.', 'err');
         return;
       }
 
-      const mosadObj = state.mosadot.find(m => m['שם מוסד'] === mosadName) || {};
-      const targetCoords = parseMosadCoords(mosadObj) || { lat: 31.7891, lng: 35.1884 };
-      const now = new Date();
-      const timeStr = now.toTimeString().slice(0, 5);
-      const dateStr = now.toISOString().slice(0, 10);
-
-      const processCoords = async (lat, lng, forcedDistance = null) => {
-        const dist = forcedDistance !== null ? forcedDistance : haversineMeters(lat, lng, targetCoords.lat, targetCoords.lng);
-        const isOk = dist <= 250;
+      document.getElementById('clockStatusBox').textContent = 'מאתר מיקום GPS...';
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const target = findCoords(mosad);
+        const dist = target ? haversine(lat, lng, target.lat, target.lng) : 0;
         const coordsText = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
-        document.getElementById('gpsInfo').textContent =
-          `${actionType} | עובד: ${worker} | מוסד: ${mosadName} | שעה: ${timeStr}\n` +
-          `מיקום: ${coordsText} | מרחק מהעמדה: ${dist} מטר | סטטוס: ${isOk ? 'תקין ✅ (עד 250 מטר)' : 'חריגת מיקום ❌ (מעל 250 מטר)'}`;
-
-        await postToSheets({
-          action: actionType,
-          date: dateStr,
-          time: timeStr,
-          worker,
-          gizra: mosadObj['גזרה'] || '',
-          mosad: mosadName,
-          address: mosadObj['כתובת'] || '',
-          coords: coordsText,
-          distance: dist,
-          status: isOk ? 'נקלט' : 'חריגת מיקום'
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action,
+            worker,
+            mosad,
+            address: target ? target.address : '',
+            coords: coordsText,
+            distance: dist
+          })
         });
 
-        showAlert(
-          isOk
-            ? `${actionType} נרשמה בגיליון בהצלחה (מרחק ${dist} מטר).`
-            : `${actionType} נרשמה עם סימון חריגת מיקום (${dist} מטר — מעל 250 מטר).`,
-          isOk ? 'ok' : 'err'
-        );
-      };
-
-      if (mode === 'sim_ok') {
-        await processCoords(targetCoords.lat + 0.0002, targetCoords.lng + 0.0002, 35);
-        return;
-      }
-      if (mode === 'sim_far') {
-        await processCoords(targetCoords.lat + 0.006, targetCoords.lng + 0.004, 650);
-        return;
-      }
-
-      if (!navigator.geolocation) {
-        showAlert('הדפדפן אינו תומך ב-GPS. ניתן לבחור מצב סימולציה לבדיקה.', 'err');
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        pos => processCoords(pos.coords.latitude, pos.coords.longitude),
-        err => showAlert('לא התקבל מיקום GPS: ' + err.message + '. יש לאשר הרשאת מיקום בדפדפן או להשתמש בסימולציה.', 'err'),
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+        const msg = `${action} נרשמה עבור ${worker} במוסד ${mosad} (מרחק: ${dist} מ׳ — ${dist <= 250 ? 'מאומת בעמדה ✅' : 'חריגת מיקום ❌'}).`;
+        document.getElementById('clockStatusBox').textContent = msg;
+        showAlert(msg, dist <= 250 ? 'ok' : 'err');
+        setTimeout(loadData, 1500);
+      }, err => {
+        showAlert('לא ניתן להחתים ללא אישור מיקום GPS במכשיר: ' + err.message, 'err');
+      }, { enableHighAccuracy: true, timeout: 10000 });
     }
 
-    function renderAdminTables() {
-      const reqWrap = document.getElementById('requestsTableWrap');
-      if (!state.requests.length) {
-        reqWrap.innerHTML = 'אין בקשות רשומות כרגע בגיליון.';
+    function reportMissingStampToManager() {
+      const worker = document.getElementById('activeWorker').value.trim() || 'עובד';
+      const mosad = document.getElementById('clockMosad').value.trim() || 'לא נבחר מוסד';
+      const text = encodeURIComponent(
+        `שלום מנהל, שכחתי להחתים שעון נוכחות בזמן אמת.\n` +
+        `שם עובד: ${worker}\n` +
+        `מוסד: ${mosad}\n` +
+        `אשמח לעדכון ידני בגיליון.`
+      );
+      window.open(`https://wa.me/${MANAGER_PHONE}?text=${text}`, '_blank');
+    }
+
+    function renderAdmin() {
+      const reqWrap = document.getElementById('adminRequestsWrap');
+      if (!appData.requests.length) {
+        reqWrap.innerHTML = 'אין בקשות שיבוץ רשומות כרגע.';
       } else {
-        const rowsHtml = state.requests.map((r, idx) => `
-          <tr>
-            <td>${escapeHtml(r['תאריך'] || '')}</td>
-            <td>${escapeHtml(r['שם עובד'] || '')}</td>
-            <td>${escapeHtml(r['שם מוסד'] || '')}</td>
-            <td>${escapeHtml(r['כתובת'] || '')}</td>
-            <td>${escapeHtml(r['שעות'] || '')}</td>
-            <td>${escapeHtml(r['סטטוס'] || '')}</td>
-            <td><button class="btn-primary" onclick="buildMessageFromRequest(${idx})">הפק הודעה</button></td>
-          </tr>
-        `).join('');
         reqWrap.innerHTML = `
           <table>
-            <thead>
-              <tr><th>תאריך</th><th>עובד</th><th>מוסד</th><th>כתובת</th><th>שעות</th><th>סטטוס</th><th>פעולה</th></tr>
-            </thead>
-            <tbody>${rowsHtml}</tbody>
+            <thead><tr><th>תאריך</th><th>עובד</th><th>מוסד</th><th>כתובת</th><th>שעות</th><th>סטטוס</th><th>פעולה</th></tr></thead>
+            <tbody>
+              ${appData.requests.map((r, idx) => `
+                <tr>
+                  <td>${esc(formatDateCell(r['תאריך']))}</td>
+                  <td>${esc(r['שם עובד'] || '')}</td>
+                  <td>${esc(r['שם מוסד'] || '')}</td>
+                  <td>${esc(r['כתובת'] || '')}</td>
+                  <td>${esc(r['שעות'] || '')}</td>
+                  <td>${esc(r['סטטוס'] || '')}</td>
+                  <td><button class="btn-primary" onclick="prepareWaMsg(${idx})">הפק הודעת שיבוץ</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
           </table>`;
       }
 
-      const attWrap = document.getElementById('attendanceTableWrap');
-      if (!state.attendance.length) {
-        attWrap.innerHTML = 'אין רשומות נוכחות בגיליון כרגע.';
+      const attWrap = document.getElementById('adminAttendanceWrap');
+      if (!appData.attendance.length) {
+        attWrap.innerHTML = 'אין רשומות נוכחות כרגע.';
       } else {
-        const attRows = state.attendance.map(a => {
-          const hrs = parseFloat(a['סך שעות משמרת'] || a['שעות'] || 0) || 0;
-          const pay = (hrs * 55).toFixed(0);
-          return `
-            <tr>
-              <td>${escapeHtml(a['תאריך'] || '')}</td>
-              <td>${escapeHtml(a['שם עובד'] || '')}</td>
-              <td>${escapeHtml(a['שם מוסד'] || a['בית ספר משובץ'] || '')}</td>
-              <td>${escapeHtml(a['שעת כניסה'] || a['שעת פתיחת משמרת'] || '')}</td>
-              <td>${escapeHtml(a['שעת יציאה'] || a['שעת סגירת משמרת'] || '')}</td>
-              <td>${escapeHtml(a['בדיקת מיקום'] || a['סטטוס'] || '')}</td>
-              <td>${hrs ? hrs + ' שעות (' + pay + ' ₪)' : '-'}</td>
-            </tr>`;
-        }).join('');
         attWrap.innerHTML = `
           <table>
-            <thead>
-              <tr><th>תאריך</th><th>עובד</th><th>מוסד</th><th>כניסה</th><th>יציאה</th><th>מיקום</th><th>שעות ושכר (55 ₪/שעה)</th></tr>
-            </thead>
-            <tbody>${attRows}</tbody>
+            <thead><tr><th>תאריך</th><th>עובד</th><th>מוסד</th><th>כניסה</th><th>יציאה</th><th>שעות</th><th>שכר (55 ₪/שעה)</th><th>אימות GPS</th></tr></thead>
+            <tbody>
+              ${appData.attendance.map(a => {
+                const hrs = Number(a['סה"כ שעות'] || a['סך שעות משמרת'] || 0);
+                const pay = hrs ? (hrs * 55).toFixed(2) + ' ₪' : '-';
+                return `
+                  <tr>
+                    <td>${esc(formatDateCell(a['תאריך']))}</td>
+                    <td>${esc(a['שם עובד'] || '')}</td>
+                    <td>${esc(a['שם מוסד'] || a['בית ספר משובץ'] || '')}</td>
+                    <td>${esc(a['שעת כניסה'] || a['שעת פתיחת משמרת'] || '')}</td>
+                    <td>${esc(a['שעת יציאה'] || a['שעת סגירת משמרת'] || '')}</td>
+                    <td>${hrs || '-'}</td>
+                    <td>${pay}</td>
+                    <td>${esc(a['בדיקת מיקום'] || '')}</td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
           </table>`;
       }
     }
 
-    function buildMessageFromRequest(idx) {
-      const r = state.requests[idx] || {};
-      const mosadObj = state.mosadot.find(m => m['שם מוסד'] === r['שם מוסד']) || {};
-      const kabat = mosadObj['קב"ט אחראי'] || 'לפי גזרה';
-      const kabatPhone = mosadObj['טלפון קב"ט'] || '';
-      lastWaPhone = String(r['טלפון עובד'] || r['טלפון'] || '').replace(/[^0-9]/g, '');
-
-      const msg =
+    function prepareWaMsg(idx) {
+      const r = appData.requests[idx] || {};
+      const info = appData.dailyPositions.find(p => p['שם מוסד'] === r['שם מוסד']) ||
+                   appData.mosadot.find(m => m['שם מוסד'] === r['שם מוסד']) || {};
+      selectedWorkerPhone = String(r['טלפון עובד'] || r['טלפון'] || '').replace(/[^0-9]/g, '');
+      const kabat = info['קב"ט אחראי'] || '';
+      const kabatPhone = info['טלפון קב"ט'] || '';
+      document.getElementById('waPreview').textContent =
         `שלום ${r['שם עובד'] || ''}, שובצת למשמרת:\n` +
-        `📅 תאריך: ${r['תאריך'] || ''}\n` +
+        `📅 תאריך: ${formatDateCell(r['תאריך'])}\n` +
         `🏫 מוסד: ${r['שם מוסד'] || ''}\n` +
-        `📍 כתובת: ${r['כתובת'] || mosadObj['כתובת'] || ''}\n` +
+        `📍 כתובת: ${r['כתובת'] || info['כתובת'] || ''}\n` +
         `🕒 שעות: ${r['שעות'] || ''}\n` +
         `👤 קב״ט אחראי: ${kabat} ${kabatPhone ? '(' + kabatPhone + ')' : ''}`;
-
-      document.getElementById('waMessage').textContent = msg;
     }
 
-    function copyWaMessage() {
-      const txt = document.getElementById('waMessage').textContent;
-      navigator.clipboard.writeText(txt).then(() => showAlert('ההודעה הועתקה ללוח.', 'ok'));
+    function sendWaToWorker() {
+      const txt = encodeURIComponent(document.getElementById('waPreview').textContent);
+      const phone = selectedWorkerPhone.startsWith('0') ? '972' + selectedWorkerPhone.slice(1) : selectedWorkerPhone;
+      window.open(phone ? `https://wa.me/${phone}?text=${txt}` : `https://wa.me/?text=${txt}`, '_blank');
     }
 
-    function openWhatsApp() {
-      const txt = encodeURIComponent(document.getElementById('waMessage').textContent);
-      const phonePart = lastWaPhone ? (lastWaPhone.startsWith('0') ? '972' + lastWaPhone.slice(1) : lastWaPhone) : '';
-      const url = phonePart ? `https://wa.me/${phonePart}?text=${txt}` : `https://wa.me/?text=${txt}`;
-      window.open(url, '_blank');
+    function formatDateCell(val) {
+      if (!val) return '';
+      const s = String(val);
+      if (s.includes('T')) return s.slice(0, 10);
+      return s;
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    setDefaultDate();
-    loadFromSheets();
+    loadData();
   </script>
 </body>
 </html>
