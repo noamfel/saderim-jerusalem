@@ -49,7 +49,7 @@
   <header>
     <div>
       <h1>מערכת שיבוץ עמדות ונוכחות — סדרנים ירושלים</h1>
-      <div style="font-size: 12px; opacity: 0.9;">כניסה אישית לעובד | שעון נוכחות GPS (250 מ׳) | ממשק מנהל מוגן</div>
+      <div style="font-size: 12px; opacity: 0.9;">כניסה אישית עם קוד אבטחה | שעון נוכחות GPS (250 מ׳) | ממשק מנהל מוגן</div>
     </div>
     <button class="btn-light" onclick="refreshCurrentView()">רענן נתונים</button>
   </header>
@@ -57,24 +57,24 @@
   <div class="container">
     <div id="alertBox" class="alert"></div>
 
-    <!-- זיהוי אישי לעובד ללא חשיפת רשימת כלל העובדים -->
+    <!-- זיהוי אישי לעובד: שם מלא + קוד אבטחה אישי -->
     <div id="workerLoginBar" class="auth-bar">
       <div>
-        <label>הזן/י את שמך המלא (כניסה אישית)</label>
-        <input id="loginNameInput" type="text" placeholder="לדוגמה: ישראל ישראלי" />
+        <label>שם מלא</label>
+        <input id="loginNameInput" type="text" placeholder="הזן/י את שמך המלא..." />
       </div>
       <div>
-        <label>מספר טלפון (לאימות)</label>
-        <input id="loginPhoneInput" type="tel" placeholder="050-0000000" />
+        <label>קוד אבטחה אישי</label>
+        <input id="loginPinInput" type="password" placeholder="הזן/י קוד אבטחה..." />
       </div>
       <div style="flex: 0 0 auto;">
-        <button class="btn-primary" onclick="loginWorker()">כניסה אישית לעובד</button>
+        <button class="btn-primary" onclick="loginWorker()">כניסה אישית מאובטחת</button>
       </div>
     </div>
 
     <div id="loggedInWorkerBanner" class="worker-pill hidden">
       <span id="loggedInWorkerText">מחובר/ת כעת</span>
-      <button class="btn-light" onclick="logoutWorker()">החלף משתמש / יציאה</button>
+      <button class="btn-light" onclick="logoutWorker()">יציאה / החלפת עובד</button>
     </div>
 
     <div class="tabs">
@@ -116,7 +116,7 @@
           <button id="btnCheckOut" class="btn-danger clock-btn" onclick="stampClock('יציאת משמרת')">החתמת יציאה עכשיו (GPS)</button>
         </div>
 
-        <div id="clockStatusBox" class="info-panel">בצע/י כניסה אישית ובחר/י מוסד להחתמת כניסה או יציאה. השעה והמיקום נרשמים אוטומטית.</div>
+        <div id="clockStatusBox" class="info-panel">בצע/י כניסה אישית עם שם וקוד אבטחה, ובחר/י מוסד להחתמת כניסה או יציאה.</div>
 
         <div style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
           <div style="font-size: 13px; color: #475569; margin-bottom: 8px;">שכחת להחתים כניסה או יציאה בזמן אמת? אין אפשרות לערוך לבד — שלח/י הודעה למנהל לתיקון ידני:</div>
@@ -126,7 +126,7 @@
 
       <div class="card">
         <h2>הנוכחות והבקשות האישיות שלי בלבד</h2>
-        <div id="myHistoryWrap">התחבר/י עם שמך כדי לצפות ברשומות האישיות שלך.</div>
+        <div id="myHistoryWrap">התחבר/י עם שמך וקוד האבטחה שלך כדי לצפות ברשומות האישיות שלך.</div>
       </div>
     </section>
 
@@ -176,7 +176,7 @@
       adminAttendance: []
     };
 
-    let currentWorker = null;
+    let currentWorker = null; // { name, phone, pin }
     let adminCode = '';
     let selectedWorkerPhone = '';
 
@@ -212,26 +212,28 @@
       }
     }
 
-    async function loginWorker() {
-      const nameVal = document.getElementById('loginNameInput').value.trim();
-      const phoneVal = document.getElementById('loginPhoneInput').value.trim();
-      if (!nameVal && !phoneVal) {
-        showAlert('יש להזין שם מלא או מספר טלפון לכניסה אישית.', 'err');
+    async function loginWorker(customName, customPin) {
+      const nameVal = (typeof customName === 'string' ? customName : document.getElementById('loginNameInput').value).trim();
+      const pinVal = (typeof customPin === 'string' ? customPin : document.getElementById('loginPinInput').value).trim();
+
+      if (!nameVal || !pinVal) {
+        showAlert('יש להזין שם מלא וקוד אבטחה אישי.', 'err');
         return;
       }
 
       try {
-        const url = `${API_URL}?mode=worker&worker=${encodeURIComponent(nameVal)}&phone=${encodeURIComponent(phoneVal)}`;
+        const url = `${API_URL}?mode=worker&worker=${encodeURIComponent(nameVal)}&pin=${encodeURIComponent(pinVal)}`;
         const res = await fetch(url);
         const data = await res.json();
         if (!data.ok) {
-          showAlert(data.error || 'לא ניתן להתחבר.', 'err');
+          showAlert(data.error || 'שם עובד או קוד אבטחה שגוי.', 'err');
           return;
         }
 
         currentWorker = {
           name: data.worker.name,
-          phone: data.worker.phone
+          phone: data.worker.phone || '',
+          pin: pinVal
         };
         state.dailyPositions = data.dailyPositions || state.dailyPositions;
         state.mosadot = data.mosadot || state.mosadot;
@@ -258,7 +260,7 @@
       document.getElementById('workerLoginBar').classList.remove('hidden');
       document.getElementById('loggedInWorkerBanner').classList.add('hidden');
       document.getElementById('loginNameInput').value = '';
-      document.getElementById('loginPhoneInput').value = '';
+      document.getElementById('loginPinInput').value = '';
       document.getElementById('btnCheckIn').disabled = false;
       document.getElementById('btnCheckOut').disabled = false;
       renderMyHistory();
@@ -270,7 +272,7 @@
       document.getElementById('workerLoginBar').classList.add('hidden');
       document.getElementById('loggedInWorkerBanner').classList.remove('hidden');
       document.getElementById('loggedInWorkerText').textContent =
-        `עובד מחובר (לשימוש אישי בלבד): ${currentWorker.name}${currentWorker.phone ? ' | ' + currentWorker.phone : ''}`;
+        `עובד מחובר (מאומת אישית): ${currentWorker.name}`;
     }
 
     function populateFiltersAndMosadot() {
@@ -335,8 +337,8 @@
     }
 
     async function requestPosition(pos) {
-      if (!currentWorker || !currentWorker.name) {
-        showAlert('יש לבצע כניסה אישית עם שמך למעלה לפני הגשת בקשה לעמדה.', 'err');
+      if (!currentWorker || !currentWorker.name || !currentWorker.pin) {
+        showAlert('יש לבצע כניסה אישית עם שם וקוד אבטחה לפני הגשת בקשה לעמדה.', 'err');
         return;
       }
 
@@ -354,6 +356,7 @@
             address: pos['כתובת'] || '',
             hours: pos['שעות'] || '',
             worker: currentWorker.name,
+            pin: currentWorker.pin,
             phone: currentWorker.phone || ''
           })
         });
@@ -405,8 +408,8 @@
     }
 
     function stampClock(action) {
-      if (!currentWorker || !currentWorker.name) {
-        showAlert('יש לבצע כניסה אישית לפני החתמת שעון.', 'err');
+      if (!currentWorker || !currentWorker.name || !currentWorker.pin) {
+        showAlert('יש לבצע כניסה אישית עם שם וקוד אבטחה לפני החתמת שעון.', 'err');
         return;
       }
       const mosad = document.getElementById('clockMosad').value.trim();
@@ -434,6 +437,7 @@
           body: JSON.stringify({
             action,
             worker: currentWorker.name,
+            pin: currentWorker.pin,
             phone: currentWorker.phone || '',
             mosad,
             address: target ? target.address : '',
@@ -466,7 +470,7 @@
     function renderMyHistory() {
       const wrap = document.getElementById('myHistoryWrap');
       if (!currentWorker) {
-        wrap.innerHTML = 'התחבר/י עם שמך כדי לצפות ברשומות הנוכחות והבקשות האישיות שלך.';
+        wrap.innerHTML = 'התחבר/י עם שמך וקוד האבטחה שלך כדי לצפות ברשומות האישיות שלך.';
         return;
       }
 
@@ -614,10 +618,8 @@
     }
 
     async function loginWorkerSilent() {
-      if (!currentWorker) return;
-      document.getElementById('loginNameInput').value = currentWorker.name;
-      document.getElementById('loginPhoneInput').value = currentWorker.phone || '';
-      await loginWorker();
+      if (!currentWorker || !currentWorker.name || !currentWorker.pin) return;
+      await loginWorker(currentWorker.name, currentWorker.pin);
     }
 
     function refreshCurrentView() {
@@ -641,8 +643,10 @@
     if (savedW) {
       try {
         currentWorker = JSON.parse(savedW);
-        applyWorkerSessionUI();
-        loginWorkerSilent();
+        if (currentWorker && currentWorker.name && currentWorker.pin) {
+          applyWorkerSessionUI();
+          loginWorkerSilent();
+        }
       } catch (e) {}
     }
     loadPublicPositions();
