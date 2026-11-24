@@ -10,8 +10,8 @@
     header { background: #1e3a5f; color: #fff; padding: 14px 18px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
     header h1 { margin: 0; font-size: 19px; }
     .container { max-width: 1180px; margin: 16px auto; padding: 0 14px; }
-    .top-bar { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
-    .top-bar > div { flex: 1; min-width: 210px; }
+    .auth-bar { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+    .auth-bar > div { flex: 1; min-width: 200px; }
     label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 5px; color: #334155; }
     select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; background: #fff; }
     button { cursor: pointer; border: none; border-radius: 9px; padding: 11px 16px; font-size: 15px; font-weight: 700; transition: 0.15s; }
@@ -38,6 +38,7 @@
     .clock-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
     .clock-btn { padding: 16px; font-size: 17px; width: 100%; }
     .info-panel { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 14px; line-height: 1.6; white-space: pre-line; }
+    .worker-pill { background: #eff6ff; border: 1px solid #93c5fd; color: #1e3a8a; padding: 10px 14px; border-radius: 10px; font-weight: 700; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
     th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: right; }
     th { background: #1e3a5f; color: #fff; }
@@ -48,49 +49,61 @@
   <header>
     <div>
       <h1>מערכת שיבוץ עמדות ונוכחות — סדרנים ירושלים</h1>
-      <div style="font-size: 12px; opacity: 0.9;">בחירת עמדות פנויות בפריסה יומית | שעון נוכחות GPS (250 מ׳)</div>
+      <div style="font-size: 12px; opacity: 0.9;">כניסה אישית לעובד | שעון נוכחות GPS (250 מ׳) | ממשק מנהל מוגן</div>
     </div>
-    <button class="btn-light" onclick="loadData()">רענן נתונים מהגיליון</button>
+    <button class="btn-light" onclick="refreshCurrentView()">רענן נתונים</button>
   </header>
 
   <div class="container">
     <div id="alertBox" class="alert"></div>
 
-    <!-- בחירת עובד קבועה למעלה -->
-    <div class="top-bar">
+    <!-- זיהוי אישי לעובד ללא חשיפת רשימת כלל העובדים -->
+    <div id="workerLoginBar" class="auth-bar">
       <div>
-        <label>בחר/י את שמך (חובה לפני בקשת שיבוץ או החתמת שעון)</label>
-        <select id="activeWorker" onchange="onWorkerSelected()">
-          <option value="">-- בחר עובד מהרשימה --</option>
-        </select>
+        <label>הזן/י את שמך המלא (כניסה אישית)</label>
+        <input id="loginNameInput" type="text" placeholder="לדוגמה: ישראל ישראלי" />
       </div>
       <div>
-        <label>סינון לפי גזרה</label>
-        <select id="gizraFilter" onchange="renderPositions()">
-          <option value="">כל הגזרות</option>
-        </select>
+        <label>מספר טלפון (לאימות)</label>
+        <input id="loginPhoneInput" type="tel" placeholder="050-0000000" />
       </div>
-      <div>
-        <label>חיפוש מוסד / כתובת</label>
-        <input id="searchBox" type="text" placeholder="הקלד שם בית ספר או רחוב..." oninput="renderPositions()" />
+      <div style="flex: 0 0 auto;">
+        <button class="btn-primary" onclick="loginWorker()">כניסה אישית לעובד</button>
       </div>
+    </div>
+
+    <div id="loggedInWorkerBanner" class="worker-pill hidden">
+      <span id="loggedInWorkerText">מחובר/ת כעת</span>
+      <button class="btn-light" onclick="logoutWorker()">החלף משתמש / יציאה</button>
     </div>
 
     <div class="tabs">
       <button id="btnTabPositions" class="tab-btn active" onclick="showTab('positions')">עמדות פנויות לשיבוץ</button>
-      <button id="btnTabClock" class="tab-btn" onclick="showTab('clock')">שעון נוכחות (כניסה / יציאה)</button>
-      <button id="btnTabAdmin" class="tab-btn" onclick="showTab('admin')">ממשק מנהל</button>
+      <button id="btnTabClock" class="tab-btn" onclick="showTab('clock')">שעון נוכחות אישי</button>
+      <button id="btnTabAdmin" class="tab-btn" onclick="showTab('admin')">ממשק מנהל (מוגן בקוד)</button>
     </div>
 
     <!-- לשונית 1: פריסה גדולה של מקומות פנויים -->
     <section id="tabPositions">
+      <div class="auth-bar" style="margin-bottom: 14px;">
+        <div>
+          <label>סינון לפי גזרה</label>
+          <select id="gizraFilter" onchange="renderPositions()">
+            <option value="">כל הגזרות</option>
+          </select>
+        </div>
+        <div>
+          <label>חיפוש מוסד / כתובת</label>
+          <input id="searchBox" type="text" placeholder="הקלד שם בית ספר או רחוב..." oninput="renderPositions()" />
+        </div>
+      </div>
       <div id="positionsContainer" class="positions-grid">טוען עמדות פנויות...</div>
     </section>
 
-    <!-- לשונית 2: שעון נוכחות נעול -->
+    <!-- לשונית 2: שעון נוכחות אישי נעול -->
     <section id="tabClock" class="hidden">
       <div class="card">
-        <h2>החתמת כניסה ויציאה בזמן אמת (ללא עריכת שעה ידנית)</h2>
+        <h2>החתמת כניסה ויציאה אישית (ללא עריכת שעה ידנית)</h2>
         <div style="max-width: 420px; margin-bottom: 10px;">
           <label>מוסד שבו את/ה מוצב/ת כעת</label>
           <select id="clockMosad">
@@ -103,30 +116,49 @@
           <button id="btnCheckOut" class="btn-danger clock-btn" onclick="stampClock('יציאת משמרת')">החתמת יציאה עכשיו (GPS)</button>
         </div>
 
-        <div id="clockStatusBox" class="info-panel">בחר/י שם עובד ומוסד, ולחצ/י על החתמת כניסה או יציאה. השעה והמיקום נרשמים אוטומטית.</div>
+        <div id="clockStatusBox" class="info-panel">בצע/י כניסה אישית ובחר/י מוסד להחתמת כניסה או יציאה. השעה והמיקום נרשמים אוטומטית.</div>
 
         <div style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
           <div style="font-size: 13px; color: #475569; margin-bottom: 8px;">שכחת להחתים כניסה או יציאה בזמן אמת? אין אפשרות לערוך לבד — שלח/י הודעה למנהל לתיקון ידני:</div>
           <button class="btn-wa" onclick="reportMissingStampToManager()">שכחתי להחתים — שלח הודעה למנהל בוואטסאפ</button>
         </div>
       </div>
+
+      <div class="card">
+        <h2>הנוכחות והבקשות האישיות שלי בלבד</h2>
+        <div id="myHistoryWrap">התחבר/י עם שמך כדי לצפות ברשומות האישיות שלך.</div>
+      </div>
     </section>
 
-    <!-- לשונית 3: ממשק מנהל -->
+    <!-- לשונית 3: ממשק מנהל מוגן בסיסמה -->
     <section id="tabAdmin" class="hidden">
-      <div class="card">
-        <h2>בקשות שיבוץ שהתקבלו מהעובדים</h2>
-        <div id="adminRequestsWrap">טוען בקשות...</div>
-        <div style="margin-top: 12px;">
-          <label>הודעת שיבוץ מוכנה לשליחה לעובד</label>
-          <div id="waPreview" class="info-panel">לחצ/י על "הפק הודעת שיבוץ" ליד בקשה כדי להכין הודעה עם מוסד, כתובת, שעות וקב״ט.</div>
-          <button class="btn-wa" style="margin-top: 8px;" onclick="sendWaToWorker()">שלח הודעה לעובד בוואטסאפ</button>
+      <div id="adminGateCard" class="card">
+        <h2>כניסה לממשק מנהל</h2>
+        <p style="font-size: 14px; color: #475569;">הגישה לניהול השיבוצים, הודעות הוואטסאפ וסיכום השעות והשכר מוגנת לקוד מנהל בלבד.</p>
+        <div style="max-width: 320px; display: flex; gap: 8px;">
+          <input id="adminCodeInput" type="password" placeholder="הזן קוד מנהל..." />
+          <button class="btn-primary" onclick="unlockAdmin()">כניסה</button>
         </div>
       </div>
 
-      <div class="card">
-        <h2>יומן נוכחות וסיכום שכר (55 ₪ לשעה)</h2>
-        <div id="adminAttendanceWrap">טוען נוכחות...</div>
+      <div id="adminContent" class="hidden">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <h2 style="margin: 0;">בקשות שיבוץ שהתקבלו מהעובדים</h2>
+            <button class="btn-light" onclick="lockAdmin()">נעילת ממשק מנהל</button>
+          </div>
+          <div id="adminRequestsWrap">טוען בקשות...</div>
+          <div style="margin-top: 12px;">
+            <label>הודעת שיבוץ מוכנה לשליחה לעובד</label>
+            <div id="waPreview" class="info-panel">לחצ/י על "הפק הודעת שיבוץ" ליד בקשה כדי להכין הודעה עם מוסד, כתובת, שעות וקב״ט.</div>
+            <button class="btn-wa" style="margin-top: 8px;" onclick="sendWaToWorker()">שלח הודעה לעובד בוואטסאפ</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>יומן נוכחות וסיכום שכר (55 ₪ לשעה)</h2>
+          <div id="adminAttendanceWrap">טוען נוכחות...</div>
+        </div>
       </div>
     </section>
   </div>
@@ -135,7 +167,17 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbyvE-LmAWYXzRWa2HpqOcuhx9maMWntd9HTr9P2OB5EgFZfeamKc_vTzzFeZLpXvikh/exec';
     const MANAGER_PHONE = '972500000000'; // עדכן כאן את מספר הוואטסאפ של המנהל בפורמט 9725...
 
-    let appData = { dailyPositions: [], mosadot: [], workers: [], requests: [], attendance: [] };
+    let state = {
+      dailyPositions: [],
+      mosadot: [],
+      myAttendance: [],
+      myRequests: [],
+      adminRequests: [],
+      adminAttendance: []
+    };
+
+    let currentWorker = null; // { name, phone }
+    let adminCode = '';
     let selectedWorkerPhone = '';
 
     function showAlert(text, type = 'ok') {
@@ -151,39 +193,88 @@
       document.getElementById('btnTabPositions').classList.toggle('active', name === 'positions');
       document.getElementById('btnTabClock').classList.toggle('active', name === 'clock');
       document.getElementById('btnTabAdmin').classList.toggle('active', name === 'admin');
-    }
-
-    async function loadData() {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        appData.dailyPositions = Array.isArray(data.dailyPositions) ? data.dailyPositions : [];
-        appData.mosadot = Array.isArray(data.mosadot) ? data.mosadot : [];
-        appData.workers = Array.isArray(data.workers) ? data.workers : [];
-        appData.requests = Array.isArray(data.requests) ? data.requests : [];
-        appData.attendance = Array.isArray(data.attendance) ? data.attendance : [];
-
-        populateDropdowns();
-        renderPositions();
-        renderAdmin();
-        updateClockButtonsLock();
-      } catch (err) {
-        showAlert('שגיאה בטעינת נתונים מהגיליון: ' + err.message, 'err');
+      if (name === 'admin' && adminCode) {
+        loadAdminData();
       }
     }
 
-    function populateDropdowns() {
-      const wSel = document.getElementById('activeWorker');
-      const prevW = wSel.value;
-      wSel.innerHTML = '<option value="">-- בחר עובד מהרשימה --</option>' +
-        appData.workers
-          .map(w => w['שם מלא'])
-          .filter(Boolean)
-          .map(name => `<option value="${esc(name)}">${esc(name)}</option>`)
-          .join('');
-      if (prevW) wSel.value = prevW;
+    async function loadPublicPositions() {
+      try {
+        const res = await fetch(`${API_URL}?mode=public`);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'שגיאה בטעינה');
+        state.dailyPositions = data.dailyPositions || [];
+        state.mosadot = data.mosadot || [];
+        populateFiltersAndMosadot();
+        renderPositions();
+      } catch (err) {
+        showAlert('שגיאה בטעינת עמדות פנויות: ' + err.message, 'err');
+      }
+    }
 
-      const gizrot = [...new Set(appData.dailyPositions.map(p => p['גזרה']).filter(Boolean))];
+    async function loginWorker() {
+      const nameVal = document.getElementById('loginNameInput').value.trim();
+      const phoneVal = document.getElementById('loginPhoneInput').value.trim();
+      if (!nameVal && !phoneVal) {
+        showAlert('יש להזין שם מלא או מספר טלפון לכניסה אישית.', 'err');
+        return;
+      }
+
+      try {
+        const url = `${API_URL}?mode=worker&worker=${encodeURIComponent(nameVal)}&phone=${encodeURIComponent(phoneVal)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data.ok) {
+          showAlert(data.error || 'לא ניתן להתחבר.', 'err');
+          return;
+        }
+
+        currentWorker = {
+          name: data.worker.name,
+          phone: data.worker.phone
+        };
+        state.dailyPositions = data.dailyPositions || state.dailyPositions;
+        state.mosadot = data.mosadot || state.mosadot;
+        state.myAttendance = data.myAttendance || [];
+        state.myRequests = data.myRequests || [];
+
+        sessionStorage.setItem('saderim_worker', JSON.stringify(currentWorker));
+        applyWorkerSessionUI();
+        populateFiltersAndMosadot();
+        renderPositions();
+        renderMyHistory();
+        updateClockLock();
+        showAlert(`התחברת בהצלחה כ-${currentWorker.name}. הגישה מוגבלת לנתונים האישיים שלך בלבד.`, 'ok');
+      } catch (err) {
+        showAlert('שגיאת תקשורת בכניסת עובד: ' + err.message, 'err');
+      }
+    }
+
+    function logoutWorker() {
+      currentWorker = null;
+      state.myAttendance = [];
+      state.myRequests = [];
+      sessionStorage.removeItem('saderim_worker');
+      document.getElementById('workerLoginBar').classList.remove('hidden');
+      document.getElementById('loggedInWorkerBanner').classList.add('hidden');
+      document.getElementById('loginNameInput').value = '';
+      document.getElementById('loginPhoneInput').value = '';
+      document.getElementById('btnCheckIn').disabled = false;
+      document.getElementById('btnCheckOut').disabled = false;
+      renderMyHistory();
+      showAlert('התנתקת מהחשבון האישי.', 'ok');
+    }
+
+    function applyWorkerSessionUI() {
+      if (!currentWorker) return;
+      document.getElementById('workerLoginBar').classList.add('hidden');
+      document.getElementById('loggedInWorkerBanner').classList.remove('hidden');
+      document.getElementById('loggedInWorkerText').textContent =
+        `עובד מחובר (לשימוש אישי בלבד): ${currentWorker.name}${currentWorker.phone ? ' | ' + currentWorker.phone : ''}`;
+    }
+
+    function populateFiltersAndMosadot() {
+      const gizrot = [...new Set(state.dailyPositions.map(p => p['גזרה']).filter(Boolean))];
       const gSel = document.getElementById('gizraFilter');
       const prevG = gSel.value;
       gSel.innerHTML = '<option value="">כל הגזרות</option>' +
@@ -191,8 +282,8 @@
       if (prevG) gSel.value = prevG;
 
       const allNames = [...new Set([
-        ...appData.dailyPositions.map(p => p['שם מוסד']),
-        ...appData.mosadot.map(m => m['שם מוסד'])
+        ...state.dailyPositions.map(p => p['שם מוסד']),
+        ...state.mosadot.map(m => m['שם מוסד'])
       ].filter(Boolean))];
 
       const cSel = document.getElementById('clockMosad');
@@ -202,41 +293,12 @@
       if (prevC) cSel.value = prevC;
     }
 
-    function onWorkerSelected() {
-      updateClockButtonsLock();
-    }
-
-    function updateClockButtonsLock() {
-      const worker = document.getElementById('activeWorker').value.trim();
-      const btnIn = document.getElementById('btnCheckIn');
-      const btnOut = document.getElementById('btnCheckOut');
-      if (!worker) {
-        btnIn.disabled = false;
-        btnOut.disabled = false;
-        return;
-      }
-      const openShift = [...appData.attendance].reverse().find(a =>
-        String(a['שם עובד'] || '').trim() === worker &&
-        (a['שעת כניסה'] || a['שעת פתיחת משמרת']) &&
-        !(a['שעת יציאה'] || a['שעת סגירת משמרת'])
-      );
-      if (openShift) {
-        btnIn.disabled = true;
-        btnOut.disabled = false;
-        document.getElementById('clockStatusBox').textContent =
-          `קיימת משמרת פתוחה עבור ${worker} במוסד ${openShift['שם מוסד'] || openShift['בית ספר משובץ'] || ''} משעה ${openShift['שעת כניסה'] || openShift['שעת פתיחת משמרת']}. כפתור הכניסה נעול עד להחתמת יציאה.`;
-      } else {
-        btnIn.disabled = false;
-        btnOut.disabled = false;
-      }
-    }
-
     function renderPositions() {
       const wrap = document.getElementById('positionsContainer');
       const gizraVal = document.getElementById('gizraFilter').value;
       const q = document.getElementById('searchBox').value.trim().toLowerCase();
 
-      const openList = appData.dailyPositions.filter(p => {
+      const openList = state.dailyPositions.filter(p => {
         const st = String(p['סטטוס'] || 'פתוח').trim();
         if (st === 'משובץ' || st === 'בוטל') return false;
         if (gizraVal && String(p['גזרה'] || '') !== gizraVal) return false;
@@ -252,7 +314,7 @@
         return;
       }
 
-      wrap.innerHTML = openList.map((p, i) => {
+      wrap.innerHTML = openList.map(p => {
         const isUrgent = String(p['סטטוס'] || '').includes('דחוף');
         const dateText = formatDateCell(p['תאריך']);
         return `
@@ -273,12 +335,11 @@
     }
 
     async function requestPosition(pos) {
-      const worker = document.getElementById('activeWorker').value.trim();
-      if (!worker) {
-        showAlert('יש לבחור את שמך למעלה לפני הגשת בקשה לעמדה.', 'err');
+      if (!currentWorker || !currentWorker.name) {
+        showAlert('יש לבצע כניסה אישית עם שמך למעלה לפני הגשת בקשה לעמדה.', 'err');
         return;
       }
-      const wObj = appData.workers.find(w => w['שם מלא'] === worker) || {};
+
       try {
         await fetch(API_URL, {
           method: 'POST',
@@ -292,11 +353,12 @@
             mosad: pos['שם מוסד'] || '',
             address: pos['כתובת'] || '',
             hours: pos['שעות'] || '',
-            worker,
-            phone: wObj['טלפון'] || ''
+            worker: currentWorker.name,
+            phone: currentWorker.phone || ''
           })
         });
-        showAlert(`הבקשה של ${worker} לעמדה "${pos['שם מוסד']}" נשלחה למנהל!`, 'ok');
+        showAlert(`הבקשה שלך לעמדה "${pos['שם מוסד']}" נשלחה למנהל.`, 'ok');
+        setTimeout(() => loginWorkerSilent(), 1200);
       } catch (err) {
         showAlert('שגיאה בשליחת הבקשה: ' + err.message, 'err');
       }
@@ -312,18 +374,44 @@
     }
 
     function findCoords(mosadName) {
-      const item = appData.dailyPositions.find(p => p['שם מוסד'] === mosadName) ||
-                   appData.mosadot.find(m => m['שם מוסד'] === mosadName);
+      const item = state.dailyPositions.find(p => p['שם מוסד'] === mosadName) ||
+                   state.mosadot.find(m => m['שם מוסד'] === mosadName);
       if (!item) return null;
       const nums = String(item['קואורדינטות GPS'] || '').match(/-?\d+\.\d+/g);
       return nums && nums.length >= 2 ? { lat: parseFloat(nums[0]), lng: parseFloat(nums[1]), address: item['כתובת'] || '' } : null;
     }
 
+    function updateClockLock() {
+      const btnIn = document.getElementById('btnCheckIn');
+      const btnOut = document.getElementById('btnCheckOut');
+      if (!currentWorker) {
+        btnIn.disabled = false;
+        btnOut.disabled = false;
+        return;
+      }
+      const openShift = [...state.myAttendance].reverse().find(a =>
+        (a['שעת כניסה'] || a['שעת פתיחת משמרת']) &&
+        !(a['שעת יציאה'] || a['שעת סגירת משמרת'])
+      );
+      if (openShift) {
+        btnIn.disabled = true;
+        btnOut.disabled = false;
+        document.getElementById('clockStatusBox').textContent =
+          `קיימת משמרת פתוחה עבורך במוסד ${openShift['שם מוסד'] || openShift['בית ספר משובץ'] || ''} משעה ${openShift['שעת כניסה'] || openShift['שעת פתיחת משמרת']}. כפתור הכניסה נעול עד להחתמת יציאה.`;
+      } else {
+        btnIn.disabled = false;
+        btnOut.disabled = false;
+      }
+    }
+
     function stampClock(action) {
-      const worker = document.getElementById('activeWorker').value.trim();
+      if (!currentWorker || !currentWorker.name) {
+        showAlert('יש לבצע כניסה אישית לפני החתמת שעון.', 'err');
+        return;
+      }
       const mosad = document.getElementById('clockMosad').value.trim();
-      if (!worker || !mosad) {
-        showAlert('יש לבחור שם עובד ומוסד לפני החתמת שעון.', 'err');
+      if (!mosad) {
+        showAlert('יש לבחור מוסד לפני החתמת שעון.', 'err');
         return;
       }
       if (!navigator.geolocation) {
@@ -345,7 +433,8 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action,
-            worker,
+            worker: currentWorker.name,
+            phone: currentWorker.phone || '',
             mosad,
             address: target ? target.address : '',
             coords: coordsText,
@@ -353,17 +442,17 @@
           })
         });
 
-        const msg = `${action} נרשמה עבור ${worker} במוסד ${mosad} (מרחק: ${dist} מ׳ — ${dist <= 250 ? 'מאומת בעמדה ✅' : 'חריגת מיקום ❌'}).`;
+        const msg = `${action} נרשמה עבורך במוסד ${mosad} (מרחק: ${dist} מ׳ — ${dist <= 250 ? 'מאומת בעמדה ✅' : 'חריגת מיקום ❌'}).`;
         document.getElementById('clockStatusBox').textContent = msg;
         showAlert(msg, dist <= 250 ? 'ok' : 'err');
-        setTimeout(loadData, 1500);
+        setTimeout(() => loginWorkerSilent(), 1500);
       }, err => {
         showAlert('לא ניתן להחתים ללא אישור מיקום GPS במכשיר: ' + err.message, 'err');
       }, { enableHighAccuracy: true, timeout: 10000 });
     }
 
     function reportMissingStampToManager() {
-      const worker = document.getElementById('activeWorker').value.trim() || 'עובד';
+      const worker = (currentWorker && currentWorker.name) || 'עובד';
       const mosad = document.getElementById('clockMosad').value.trim() || 'לא נבחר מוסד';
       const text = encodeURIComponent(
         `שלום מנהל, שכחתי להחתים שעון נוכחות בזמן אמת.\n` +
@@ -374,16 +463,93 @@
       window.open(`https://wa.me/${MANAGER_PHONE}?text=${text}`, '_blank');
     }
 
-    function renderAdmin() {
+    function renderMyHistory() {
+      const wrap = document.getElementById('myHistoryWrap');
+      if (!currentWorker) {
+        wrap.innerHTML = 'התחבר/י עם שמך כדי לצפות ברשומות הנוכחות והבקשות האישיות שלך.';
+        return;
+      }
+
+      const attRows = state.myAttendance.map(a => {
+        const hrs = Number(a['סה"כ שעות'] || a['סך שעות משמרת'] || 0);
+        const pay = hrs ? (hrs * 55).toFixed(2) + ' ₪' : '-';
+        return `
+          <tr>
+            <td>${esc(formatDateCell(a['תאריך']))}</td>
+            <td>${esc(a['שם מוסד'] || a['בית ספר משובץ'] || '')}</td>
+            <td>${esc(a['שעת כניסה'] || a['שעת פתיחת משמרת'] || '')}</td>
+            <td>${esc(a['שעת יציאה'] || a['שעת סגירת משמרת'] || '')}</td>
+            <td>${hrs || '-'}</td>
+            <td>${pay}</td>
+            <td>${esc(a['בדיקת מיקום'] || '')}</td>
+          </tr>`;
+      }).join('');
+
+      wrap.innerHTML = `
+        <h3>הנוכחות שלי</h3>
+        <table>
+          <thead><tr><th>תאריך</th><th>מוסד</th><th>כניסה</th><th>יציאה</th><th>שעות</th><th>שכר (55 ₪/שעה)</th><th>אימות GPS</th></tr></thead>
+          <tbody>${attRows || '<tr><td colspan="7">אין רשומות נוכחות עבורך עדיין.</td></tr>'}</tbody>
+        </table>
+      `;
+    }
+
+    // ממשק מנהל מוגן בסיסמה
+    async function unlockAdmin() {
+      const entered = document.getElementById('adminCodeInput').value.trim();
+      if (!entered) {
+        showAlert('יש להזין קוד מנהל.', 'err');
+        return;
+      }
+      adminCode = entered;
+      await loadAdminData();
+    }
+
+    function lockAdmin() {
+      adminCode = '';
+      state.adminRequests = [];
+      state.adminAttendance = [];
+      document.getElementById('adminCodeInput').value = '';
+      document.getElementById('adminContent').classList.add('hidden');
+      document.getElementById('adminGateCard').classList.remove('hidden');
+      showAlert('ממשק המנהל ננעל.', 'ok');
+    }
+
+    async function loadAdminData() {
+      if (!adminCode) return;
+      try {
+        const res = await fetch(`${API_URL}?mode=admin&code=${encodeURIComponent(adminCode)}`);
+        const data = await res.json();
+        if (!data.ok) {
+          adminCode = '';
+          document.getElementById('adminContent').classList.add('hidden');
+          document.getElementById('adminGateCard').classList.remove('hidden');
+          showAlert(data.error || 'קוד מנהל שגוי', 'err');
+          return;
+        }
+        state.dailyPositions = data.dailyPositions || state.dailyPositions;
+        state.mosadot = data.mosadot || state.mosadot;
+        state.adminRequests = data.requests || [];
+        state.adminAttendance = data.attendance || [];
+
+        document.getElementById('adminGateCard').classList.add('hidden');
+        document.getElementById('adminContent').classList.remove('hidden');
+        renderAdminTables();
+      } catch (err) {
+        showAlert('שגיאה בכניסה לממשק מנהל: ' + err.message, 'err');
+      }
+    }
+
+    function renderAdminTables() {
       const reqWrap = document.getElementById('adminRequestsWrap');
-      if (!appData.requests.length) {
+      if (!state.adminRequests.length) {
         reqWrap.innerHTML = 'אין בקשות שיבוץ רשומות כרגע.';
       } else {
         reqWrap.innerHTML = `
           <table>
             <thead><tr><th>תאריך</th><th>עובד</th><th>מוסד</th><th>כתובת</th><th>שעות</th><th>סטטוס</th><th>פעולה</th></tr></thead>
             <tbody>
-              ${appData.requests.map((r, idx) => `
+              ${state.adminRequests.map((r, idx) => `
                 <tr>
                   <td>${esc(formatDateCell(r['תאריך']))}</td>
                   <td>${esc(r['שם עובד'] || '')}</td>
@@ -399,14 +565,14 @@
       }
 
       const attWrap = document.getElementById('adminAttendanceWrap');
-      if (!appData.attendance.length) {
+      if (!state.adminAttendance.length) {
         attWrap.innerHTML = 'אין רשומות נוכחות כרגע.';
       } else {
         attWrap.innerHTML = `
           <table>
             <thead><tr><th>תאריך</th><th>עובד</th><th>מוסד</th><th>כניסה</th><th>יציאה</th><th>שעות</th><th>שכר (55 ₪/שעה)</th><th>אימות GPS</th></tr></thead>
             <tbody>
-              ${appData.attendance.map(a => {
+              ${state.adminAttendance.map(a => {
                 const hrs = Number(a['סה"כ שעות'] || a['סך שעות משמרת'] || 0);
                 const pay = hrs ? (hrs * 55).toFixed(2) + ' ₪' : '-';
                 return `
@@ -427,9 +593,9 @@
     }
 
     function prepareWaMsg(idx) {
-      const r = appData.requests[idx] || {};
-      const info = appData.dailyPositions.find(p => p['שם מוסד'] === r['שם מוסד']) ||
-                   appData.mosadot.find(m => m['שם מוסד'] === r['שם מוסד']) || {};
+      const r = state.adminRequests[idx] || {};
+      const info = state.dailyPositions.find(p => p['שם מוסד'] === r['שם מוסד']) ||
+                   state.mosadot.find(m => m['שם מוסד'] === r['שם מוסד']) || {};
       selectedWorkerPhone = String(r['טלפון עובד'] || r['טלפון'] || '').replace(/[^0-9]/g, '');
       const kabat = info['קב"ט אחראי'] || '';
       const kabatPhone = info['טלפון קב"ט'] || '';
@@ -448,6 +614,19 @@
       window.open(phone ? `https://wa.me/${phone}?text=${txt}` : `https://wa.me/?text=${txt}`, '_blank');
     }
 
+    async function loginWorkerSilent() {
+      if (!currentWorker) return;
+      document.getElementById('loginNameInput').value = currentWorker.name;
+      document.getElementById('loginPhoneInput').value = currentWorker.phone || '';
+      await loginWorker();
+    }
+
+    function refreshCurrentView() {
+      loadPublicPositions();
+      if (currentWorker) loginWorkerSilent();
+      if (adminCode) loadAdminData();
+    }
+
     function formatDateCell(val) {
       if (!val) return '';
       const s = String(val);
@@ -459,7 +638,16 @@
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    loadData();
+    // שחזור סשן עובד מקומי אם קיים
+    const savedW = sessionStorage.getItem('saderim_worker');
+    if (savedW) {
+      try {
+        currentWorker = JSON.parse(savedW);
+        applyWorkerSessionUI();
+        loginWorkerSilent();
+      } catch (e) {}
+    }
+    loadPublicPositions();
   </script>
 </body>
 </html>
